@@ -52,7 +52,6 @@ function makeSignature(body: string, timestamp: number | string): string {
 describe('HCM Webhook — HMAC Security', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let jwtService: JwtService;
 
   beforeAll(async () => {
     // Suppress GlobalExceptionFilter noise from expected 4xx paths
@@ -61,7 +60,6 @@ describe('HCM Webhook — HMAC Security', () => {
 
     app = await buildApp();
     dataSource = app.get(DataSource);
-    jwtService = app.get(JwtService);
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
