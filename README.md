@@ -134,17 +134,19 @@ npm run test:cov
 
 ## Test Results & Coverage
 
-**57 tests, 6 suites — all passing.**
+**82 tests, 8 suites — all passing.**
 
 ```
-Test Suites: 6 passed, 6 total
-Tests:       57 passed, 57 total
+Test Suites: 8 passed, 8 total
+Tests:       82 passed, 82 total
 
- Unit Tests (39 tests)
+ Unit Tests (64 tests)
   ✓ state-machine.spec.ts       — 10 tests
   ✓ balances.service.spec.ts    — 13 tests
   ✓ sync.service.spec.ts        —  9 tests
   ✓ auth.service.spec.ts        —  7 tests
+  ✓ users.service.spec.ts       — 16 tests
+  ✓ hcm.adapter.spec.ts         —  9 tests
 
  Integration Tests (18 tests)
   ✓ request-lifecycle.spec.ts   — 11 tests
@@ -156,8 +158,8 @@ Tests:       57 passed, 57 total
 ```
 File                         | % Stmts | % Branch | % Funcs | % Lines
 -----------------------------|---------|----------|---------|--------
-All files                    |   75.56 |    67.44 |   54.86 |   75.30
- auth.service.ts             |  100.00 |    85.00 |  100.00 |  100.00
+All files                    |   85.83 |    74.14 |   69.02 |   86.06
+ auth.service.ts             |  100.00 |    81.81 |  100.00 |  100.00
  auth.controller.ts          |   90.90 |    75.00 |   66.66 |   88.88
  jwt.strategy.ts             |   93.33 |    75.00 |  100.00 |   92.30
  balances.service.ts         |   80.59 |    82.35 |   63.63 |   81.35
@@ -170,6 +172,9 @@ All files                    |   75.56 |    67.44 |   54.86 |   75.30
  webhooks.controller.ts      |  100.00 |    80.76 |  100.00 |  100.00
  jwt-auth.guard.ts           |  100.00 |    87.50 |  100.00 |  100.00
  roles.guard.ts              |  100.00 |    91.66 |  100.00 |  100.00
+ users.service.ts            |  100.00 |    93.33 |  100.00 |  100.00
+ users.controller.ts         |   73.07 |    75.00 |   12.50 |   70.83
+ hcm.adapter.ts              |   98.14 |    85.00 |   90.90 |  100.00
 ```
 
 Coverage reports are written to `./coverage/`. Open `coverage/index.html` in a browser.
