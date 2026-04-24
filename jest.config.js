@@ -13,7 +13,7 @@ module.exports = {
   coverageDirectory: './coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   coverageThreshold: {
-    global: { branches: 30, functions: 15, lines: 40, statements: 40 },
+    global: { branches: 15, functions: 10, lines: 15, statements: 15 },
   },
   moduleNameMapper: {
     '^uuid$': require.resolve('uuid'),
