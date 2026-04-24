@@ -50,6 +50,34 @@ HCM_WEBHOOK_SECRET=your-webhook-secret-minimum-32-characters
 HCM_BASE_URL=http://localhost:4000
 ```
 
+> **Good to know:** The application has sensible fallback defaults for almost every configuration. If an environment variable is not defined in your `.env` file, the application will automatically use a safe default value, so it's okay if you don't list them all.
+> 
+> <details>
+> <summary><strong>Click to see all available Environment Variables</strong></summary>
+> 
+> | Variable | Default Value | Description |
+> | --- | --- | --- |
+> | `NODE_ENV` | `development` | Environment mode (development, production, test) |
+> | `PORT` | `3000` | Port for the main microservice |
+> | `API_PREFIX` | `api/v1` | Global prefix for all API routes |
+> | `DB_PATH` | `./data/time-off.sqlite` | Path to the SQLite database file |
+> | `JWT_SECRET` | `CHANGE_ME_...` | Secret key for signing JWTs |
+> | `JWT_EXPIRES_IN` | `15m` | Token expiration time |
+> | `JWT_REFRESH_EXPIRES_IN` | `7d` | Refresh token expiration time |
+> | `HCM_BASE_URL` | `http://localhost:4000` | Base URL of the HCM server |
+> | `HCM_API_KEY` | `mock-hcm-api-key` | API key to authenticate with the HCM server |
+> | `HCM_TIMEOUT_MS` | `10000` | HTTP timeout when contacting HCM |
+> | `HCM_RETRY_ATTEMPTS` | `3` | Number of times to retry failed HCM requests |
+> | `HCM_RETRY_DELAY_MS` | `500` | Delay between HCM retries |
+> | `HCM_WEBHOOK_SECRET` | `CHANGE_ME_...` | HMAC secret for verifying incoming webhooks |
+> | `STALE_THRESHOLD_MS` | `300000` | Cache TTL for balances (5 minutes) |
+> | `BATCH_SYNC_CRON` | `0 2 * * *` | Cron schedule for nightly batch sync |
+> | `THROTTLE_TTL_MS` | `60000` | Rate limiting time window |
+> | `THROTTLE_LIMIT` | `100` | Rate limiting request limit |
+> | `MOCK_HCM_PORT` | `4000` | Port for the standalone mock server |
+> | `MOCK_HCM_FAIL_RATE` | `0` | Artificial failure rate for the mock server testing |
+> </details>
+
 ### 3. Create the data directory
 
 ```bash
