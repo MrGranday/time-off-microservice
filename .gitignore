@@ -5,6 +5,7 @@ data/
 *.sqlite
 *.db
 .env
+.env.*
 .env.local
 coverage/
 *.log
