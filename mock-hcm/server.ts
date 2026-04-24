@@ -29,11 +29,11 @@ function balanceKey(employeeId: string, locationId: string, leaveType: string): 
 function seed() {
   const now = new Date().toISOString();
   const entries: BalanceRecord[] = [
-    { employeeId: 'emp-001', locationId: 'loc-NYC', leaveType: 'ANNUAL',   totalDays: 20, usedDays: 2,  lastModifiedAt: now },
-    { employeeId: 'emp-001', locationId: 'loc-NYC', leaveType: 'SICK',     totalDays: 10, usedDays: 0,  lastModifiedAt: now },
-    { employeeId: 'emp-002', locationId: 'loc-NYC', leaveType: 'ANNUAL',   totalDays: 15, usedDays: 3,  lastModifiedAt: now },
-    { employeeId: 'emp-002', locationId: 'loc-NYC', leaveType: 'MATERNITY',totalDays: 90, usedDays: 0,  lastModifiedAt: now },
-    { employeeId: 'emp-003', locationId: 'loc-LA',  leaveType: 'ANNUAL',   totalDays: 25, usedDays: 10, lastModifiedAt: now },
+    { employeeId: 'emp-001', locationId: 'loc-NYC', leaveType: 'ANNUAL', totalDays: 20, usedDays: 2, lastModifiedAt: now },
+    { employeeId: 'emp-001', locationId: 'loc-NYC', leaveType: 'SICK', totalDays: 10, usedDays: 0, lastModifiedAt: now },
+    { employeeId: 'emp-002', locationId: 'loc-NYC', leaveType: 'ANNUAL', totalDays: 15, usedDays: 3, lastModifiedAt: now },
+    { employeeId: 'emp-002', locationId: 'loc-NYC', leaveType: 'MATERNITY', totalDays: 90, usedDays: 0, lastModifiedAt: now },
+    { employeeId: 'emp-003', locationId: 'loc-LA', leaveType: 'ANNUAL', totalDays: 25, usedDays: 10, lastModifiedAt: now },
   ];
   entries.forEach((e) => balances.set(balanceKey(e.employeeId, e.locationId, e.leaveType), e));
   console.log(`[MockHCM] Seeded ${entries.length} balance records`);
@@ -173,7 +173,7 @@ app.post('/hcm/admin/anniversary-bonus', (req: Request, res: Response) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 seed();
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`[MockHCM] 🟢 Running on http://localhost:${PORT}`);
   console.log(`[MockHCM] Fail rate: ${(FAIL_RATE * 100).toFixed(0)}%`);
 });
