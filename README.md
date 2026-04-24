@@ -29,7 +29,7 @@ A production-grade time-off management microservice built with **NestJS** and **
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/<your-username>/time-off-microservice.git
+git clone https://github.com/MrGranday/time-off-microservice.git
 cd time-off-microservice
 npm install
 ```
@@ -130,6 +130,46 @@ npm run test:integration
 
 # Tests with coverage report
 npm run test:cov
+```
+
+## Test Results & Coverage
+
+**57 tests, 6 suites — all passing.**
+
+```
+Test Suites: 6 passed, 6 total
+Tests:       57 passed, 57 total
+
+ Unit Tests (39 tests)
+  ✓ state-machine.spec.ts       — 10 tests
+  ✓ balances.service.spec.ts    — 13 tests
+  ✓ sync.service.spec.ts        —  9 tests
+  ✓ auth.service.spec.ts        —  7 tests
+
+ Integration Tests (18 tests)
+  ✓ request-lifecycle.spec.ts   — 11 tests
+  ✓ webhooks-and-sync.spec.ts   —  7 tests
+```
+
+**Coverage summary (`npm run test:cov`):**
+
+```
+File                         | % Stmts | % Branch | % Funcs | % Lines
+-----------------------------|---------|----------|---------|--------
+All files                    |   75.56 |    67.44 |   54.86 |   75.30
+ auth.service.ts             |  100.00 |    85.00 |  100.00 |  100.00
+ auth.controller.ts          |   90.90 |    75.00 |   66.66 |   88.88
+ jwt.strategy.ts             |   93.33 |    75.00 |  100.00 |   92.30
+ balances.service.ts         |   80.59 |    82.35 |   63.63 |   81.35
+ balances.controller.ts      |   80.00 |    76.92 |   60.00 |   78.26
+ requests.service.ts         |   81.08 |    65.62 |   85.71 |   83.01
+ requests.controller.ts      |   88.00 |    66.66 |   71.42 |   86.95
+ state-machine.ts            |  100.00 |    87.50 |  100.00 |  100.00
+ sync.service.ts             |   95.65 |    80.00 |   80.00 |   95.45
+ sync.controller.ts          |   96.15 |    75.00 |   75.00 |   95.83
+ webhooks.controller.ts      |  100.00 |    80.76 |  100.00 |  100.00
+ jwt-auth.guard.ts           |  100.00 |    87.50 |  100.00 |  100.00
+ roles.guard.ts              |  100.00 |    91.66 |  100.00 |  100.00
 ```
 
 Coverage reports are written to `./coverage/`. Open `coverage/index.html` in a browser.
