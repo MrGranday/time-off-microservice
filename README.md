@@ -26,13 +26,15 @@ A production-grade time-off management microservice built with **NestJS** and **
 
 ## Quick Start
 
-### 1. Clone & Install
+### 1. Clone & Install Root Dependencies
 
 ```bash
 git clone https://github.com/MrGranday/time-off-microservice.git
 cd time-off-microservice
 npm install
 ```
+
+> **IMPORTANT:** This project has two separate Node environments. You must run `npm install` in the **root directory** (for the main microservice) AND in the **`mock-hcm` directory** (for the mock server). Step 4 will guide you through the mock server installation.
 
 ### 2. Configure Environment
 
@@ -55,6 +57,8 @@ mkdir data
 ```
 
 ### 4. Start the Mock HCM Server (Terminal 1)
+
+The Mock HCM is a standalone Express server. It has its own `package.json`, so you must install its dependencies separately.
 
 ```bash
 cd mock-hcm
@@ -117,6 +121,8 @@ curl http://localhost:3000/api/v1/balances/<employeeId> \
 ---
 
 ## Running Tests
+
+> **Note:** Ensure you are in the root `time-off-microservice` directory before running any test commands.
 
 ```bash
 # All tests
