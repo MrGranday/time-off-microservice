@@ -39,6 +39,11 @@ function seed() {
   console.log(`[MockHCM] Seeded ${entries.length} balance records`);
 }
 
+// ── Health (Public) ───────────────────────────────────────────────────────────
+app.get('/hcm/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // ── Middleware: API key check ─────────────────────────────────────────────────
 app.use((req: Request, res: Response, next: NextFunction) => {
   const key = req.headers['x-api-key'];
@@ -55,11 +60,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     return res.status(503).json({ code: 'SERVICE_UNAVAILABLE', message: 'Simulated HCM failure' });
   }
   next();
-});
-
-// ── Health ────────────────────────────────────────────────────────────────────
-app.get('/hcm/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // ── GET /hcm/balances/:employeeId/:locationId/:leaveType ──────────────────────
