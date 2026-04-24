@@ -53,12 +53,16 @@ export class RequestsController {
     @Query('status') status: string | undefined,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-    @CurrentUser() user: { id: string; role: string },
+    @CurrentUser() user: { id: string; role: UserRole },
   ) {
     // Employees can only see their own requests
     const effectiveEmployeeId =
       user.role === UserRole.EMPLOYEE ? user.id : employeeId;
-    return this.requestsService.findAll({ employeeId: effectiveEmployeeId, status }, page, limit);
+    return this.requestsService.findAll(
+      { employeeId: effectiveEmployeeId, status },
+      page,
+      limit,
+    );
   }
 
   @Get(':id')
@@ -74,7 +78,13 @@ export class RequestsController {
     @CurrentUser() user: { id: string },
     @Req() req: Request,
   ) {
-    return this.requestsService.approve(id, user.id, dto, req.ip, req.headers['user-agent']);
+    return this.requestsService.approve(
+      id,
+      user.id,
+      dto,
+      req.ip,
+      req.headers['user-agent'],
+    );
   }
 
   @Patch(':id/reject')
@@ -85,7 +95,13 @@ export class RequestsController {
     @CurrentUser() user: { id: string },
     @Req() req: Request,
   ) {
-    return this.requestsService.reject(id, user.id, dto, req.ip, req.headers['user-agent']);
+    return this.requestsService.reject(
+      id,
+      user.id,
+      dto,
+      req.ip,
+      req.headers['user-agent'],
+    );
   }
 
   @Delete(':id')
@@ -95,6 +111,11 @@ export class RequestsController {
     @CurrentUser() user: { id: string },
     @Req() req: Request,
   ) {
-    return this.requestsService.cancel(id, user.id, req.ip, req.headers['user-agent']);
+    return this.requestsService.cancel(
+      id,
+      user.id,
+      req.ip,
+      req.headers['user-agent'],
+    );
   }
 }

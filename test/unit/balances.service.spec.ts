@@ -1,7 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { LeaveBalance, LeaveType } from '../../src/modules/balances/balance.entity';
+import {
+  LeaveBalance,
+  LeaveType,
+} from '../../src/modules/balances/balance.entity';
 import { BalancesService } from '../../src/modules/balances/balances.service';
 import { AuditService } from '../../src/modules/audit/audit.service';
 import { ConfigService } from '@nestjs/config';
@@ -16,7 +19,9 @@ const mockRepo = () => ({
   update: jest.fn(),
 });
 
-const mockAuditService = () => ({ log: jest.fn().mockResolvedValue(undefined) });
+const mockAuditService = () => ({
+  log: jest.fn().mockResolvedValue(undefined),
+});
 
 const mockDataSource = () => ({
   query: jest.fn(),
@@ -32,7 +37,6 @@ const mockConfigService = () => ({
 describe('BalancesService', () => {
   let service: BalancesService;
   let repo: ReturnType<typeof mockRepo>;
-  let dataSource: ReturnType<typeof mockDataSource>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -47,7 +51,6 @@ describe('BalancesService', () => {
 
     service = module.get(BalancesService);
     repo = module.get(getRepositoryToken(LeaveBalance));
-    dataSource = module.get(DataSource);
   });
 
   beforeEach(() => {
@@ -93,7 +96,11 @@ describe('BalancesService', () => {
     it('returns balance when found', async () => {
       const balance = { id: 'bal-1', availableDays: 10 };
       repo.findOne.mockResolvedValue(balance);
-      const result = await service.findOneOrThrow('emp-1', 'loc-1', LeaveType.ANNUAL);
+      const result = await service.findOneOrThrow(
+        'emp-1',
+        'loc-1',
+        LeaveType.ANNUAL,
+      );
       expect(result).toEqual(balance);
     });
   });
@@ -108,7 +115,14 @@ describe('BalancesService', () => {
         version: 1,
       });
       await expect(
-        service.deductDays('emp-1', 'loc-1', LeaveType.ANNUAL, 3, 'req-1', 'emp-1'),
+        service.deductDays(
+          'emp-1',
+          'loc-1',
+          LeaveType.ANNUAL,
+          3,
+          'req-1',
+          'emp-1',
+        ),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -124,12 +138,19 @@ describe('BalancesService', () => {
         leaveType: LeaveType.ANNUAL,
       };
       repo.findOne
-        .mockResolvedValueOnce(balance)     // first load for deduct
+        .mockResolvedValueOnce(balance) // first load for deduct
         .mockResolvedValueOnce({ ...balance, usedDays: 8, version: 2 }); // after update
 
       repo.update.mockResolvedValue({ affected: 1 });
 
-      const result = await service.deductDays('emp-1', 'loc-1', LeaveType.ANNUAL, 3, 'req-1', 'emp-1');
+      const result = await service.deductDays(
+        'emp-1',
+        'loc-1',
+        LeaveType.ANNUAL,
+        3,
+        'req-1',
+        'emp-1',
+      );
       expect(result).toBeDefined();
       expect(repo.update).toHaveBeenCalledTimes(1);
     });
@@ -144,14 +165,21 @@ describe('BalancesService', () => {
       };
       repo.findOne
         .mockResolvedValueOnce(balance)
-        .mockResolvedValueOnce({ ...balance, version: 2 })   // fresh load on retry
+        .mockResolvedValueOnce({ ...balance, version: 2 }) // fresh load on retry
         .mockResolvedValueOnce({ ...balance, usedDays: 8, version: 3 }); // after successful update
 
       repo.update
-        .mockResolvedValueOnce({ affected: 0 })  // first attempt: conflict (0 rows)
+        .mockResolvedValueOnce({ affected: 0 }) // first attempt: conflict (0 rows)
         .mockResolvedValueOnce({ affected: 1 }); // second attempt: success
 
-      const result = await service.deductDays('emp-1', 'loc-1', LeaveType.ANNUAL, 3, 'req-1', 'emp-1');
+      const result = await service.deductDays(
+        'emp-1',
+        'loc-1',
+        LeaveType.ANNUAL,
+        3,
+        'req-1',
+        'emp-1',
+      );
       expect(result).toBeDefined();
       expect(repo.update).toHaveBeenCalledTimes(2);
     });
@@ -170,7 +198,15 @@ describe('BalancesService', () => {
       repo.update.mockResolvedValue({ affected: 0 });
 
       await expect(
-        service.deductDays('emp-1', 'loc-1', LeaveType.ANNUAL, 3, 'req-1', 'emp-1', 3),
+        service.deductDays(
+          'emp-1',
+          'loc-1',
+          LeaveType.ANNUAL,
+          3,
+          'req-1',
+          'emp-1',
+          3,
+        ),
       ).rejects.toThrow(ConflictException);
 
       expect(repo.update).toHaveBeenCalledTimes(3);
@@ -184,18 +220,41 @@ describe('BalancesService', () => {
       repo.create.mockReturnValue(created);
       repo.save.mockResolvedValue(created);
 
-      const result = await service.upsertFromHcm('emp-1', 'loc-1', LeaveType.ANNUAL, 20, 0);
+      const result = await service.upsertFromHcm(
+        'emp-1',
+        'loc-1',
+        LeaveType.ANNUAL,
+        20,
+        0,
+      );
       expect(repo.create).toHaveBeenCalled();
       expect(repo.save).toHaveBeenCalled();
       expect(result.totalDays).toBe(20);
     });
 
     it('updates an existing balance record', async () => {
-      const existing = { id: 'bal-1', totalDays: 15, usedDays: 3, version: 1, hcmSynced: false };
+      const existing = {
+        id: 'bal-1',
+        totalDays: 15,
+        usedDays: 3,
+        version: 1,
+        hcmSynced: false,
+      };
       repo.findOne.mockResolvedValue(existing);
-      repo.save.mockResolvedValue({ ...existing, totalDays: 20, usedDays: 5, version: 2 });
+      repo.save.mockResolvedValue({
+        ...existing,
+        totalDays: 20,
+        usedDays: 5,
+        version: 2,
+      });
 
-      const result = await service.upsertFromHcm('emp-1', 'loc-1', LeaveType.ANNUAL, 20, 5);
+      const result = await service.upsertFromHcm(
+        'emp-1',
+        'loc-1',
+        LeaveType.ANNUAL,
+        20,
+        5,
+      );
       expect(result.totalDays).toBe(20);
       expect(result.version).toBe(2);
     });

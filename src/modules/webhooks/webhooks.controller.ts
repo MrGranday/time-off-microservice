@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { SyncService } from '../sync/sync.service';
 import { BalancesService } from '../balances/balances.service';
-import { SyncTrigger } from '../sync/sync-log.entity';
+import { LeaveType } from '../balances/balance.entity';
 
 interface HcmWebhookPayload {
   event: string;
@@ -53,7 +53,7 @@ export class WebhooksController {
   @Post('hcm/balance-update')
   @HttpCode(HttpStatus.OK)
   async handleBalanceUpdate(
-    @Req() req: any,
+    @Req() req: Request & { rawBody?: Buffer },
     @Headers('x-hcm-signature') signature: string,
     @Headers('x-hcm-timestamp') timestampHeader: string,
     @Body() payload: HcmWebhookPayload,
@@ -75,7 +75,9 @@ export class WebhooksController {
     const sigBuffer = Buffer.from(signature ?? '', 'hex');
     const expectedBuffer = Buffer.from(expectedSig, 'hex');
 
-    const isValid = sigBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+    const isValid =
+      sigBuffer.length === expectedBuffer.length &&
+      crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 
     if (!isValid) {
       this.logger.warn('Invalid HCM webhook signature rejected');
@@ -86,11 +88,12 @@ export class WebhooksController {
     this.logger.log(`Processing HCM webhook event: ${payload.event}`);
 
     if (payload.event === 'BALANCE_UPDATED') {
-      const { employeeId, locationId, leaveType, totalDays, usedDays } = payload.data;
+      const { employeeId, locationId, leaveType, totalDays, usedDays } =
+        payload.data;
       await this.balancesService.upsertFromHcm(
         employeeId,
         locationId,
-        leaveType as any,
+        leaveType as LeaveType,
         totalDays,
         usedDays,
         'HCM_WEBHOOK',

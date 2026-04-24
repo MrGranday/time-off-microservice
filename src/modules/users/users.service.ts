@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,12 +17,21 @@ export class UsersService {
 
   async create(dto: CreateUserDto): Promise<User> {
     if (dto.managerId) {
-      const manager = await this.userRepo.findOne({ where: { id: dto.managerId } });
+      const manager = await this.userRepo.findOne({
+        where: { id: dto.managerId },
+      });
       if (!manager) {
-        throw new BadRequestException(`Manager with ID ${dto.managerId} does not exist`);
+        throw new BadRequestException(
+          `Manager with ID ${dto.managerId} does not exist`,
+        );
       }
-      if (manager.role !== UserRole.MANAGER && manager.role !== UserRole.ADMIN) {
-        throw new BadRequestException('The assigned manager must have the MANAGER or ADMIN role');
+      if (
+        manager.role !== UserRole.MANAGER &&
+        manager.role !== UserRole.ADMIN
+      ) {
+        throw new BadRequestException(
+          'The assigned manager must have the MANAGER or ADMIN role',
+        );
       }
     }
 
@@ -60,16 +68,25 @@ export class UsersService {
     return this.userRepo.find({ where: { isActive: true } });
   }
 
-  async update(id: string, dto: UpdateUserDto, actorId: string): Promise<User> {
+  async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findByIdOrThrow(id);
 
     if (dto.managerId) {
-      const manager = await this.userRepo.findOne({ where: { id: dto.managerId } });
+      const manager = await this.userRepo.findOne({
+        where: { id: dto.managerId },
+      });
       if (!manager) {
-        throw new BadRequestException(`Manager with ID ${dto.managerId} does not exist`);
+        throw new BadRequestException(
+          `Manager with ID ${dto.managerId} does not exist`,
+        );
       }
-      if (manager.role !== UserRole.MANAGER && manager.role !== UserRole.ADMIN) {
-        throw new BadRequestException('Assigned manager must have MANAGER or ADMIN role');
+      if (
+        manager.role !== UserRole.MANAGER &&
+        manager.role !== UserRole.ADMIN
+      ) {
+        throw new BadRequestException(
+          'Assigned manager must have MANAGER or ADMIN role',
+        );
       }
       // Prevent circular management chain
       if (dto.managerId === id) {

@@ -1,7 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { SyncLog, SyncStatus, SyncTrigger, SyncType } from '../../src/modules/sync/sync-log.entity';
+import {
+  SyncLog,
+  SyncStatus,
+  SyncTrigger,
+} from '../../src/modules/sync/sync-log.entity';
 import { SyncService } from '../../src/modules/sync/sync.service';
 import { BalancesService } from '../../src/modules/balances/balances.service';
 import { HcmAdapter } from '../../src/infrastructure/hcm/hcm.adapter';
@@ -19,13 +23,6 @@ const mockBalancesService = () => ({
 const mockHcmAdapter = () => ({
   getBalance: jest.fn(),
 });
-
-const mockLogger = {
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-};
 
 describe('SyncService', () => {
   let service: SyncService;
@@ -74,9 +71,18 @@ describe('SyncService', () => {
 
       await service.syncEmployeeBalance('emp-1', 'loc-1', 'ANNUAL');
 
-      expect(hcmAdapter.getBalance).toHaveBeenCalledWith('emp-1', 'loc-1', 'ANNUAL');
+      expect(hcmAdapter.getBalance).toHaveBeenCalledWith(
+        'emp-1',
+        'loc-1',
+        'ANNUAL',
+      );
       expect(balancesService.upsertFromHcm).toHaveBeenCalledWith(
-        'emp-1', 'loc-1', 'ANNUAL', 20, 5, 'SYSTEM_SYNC',
+        'emp-1',
+        'loc-1',
+        'ANNUAL',
+        20,
+        5,
+        'SYSTEM_SYNC',
       );
       expect(syncLogRepo.save).toHaveBeenCalled();
     });
@@ -103,8 +109,22 @@ describe('SyncService', () => {
   describe('runBatchSync', () => {
     it('syncs all records and returns counts', async () => {
       const records = [
-        { employeeId: 'e1', locationId: 'l1', leaveType: 'ANNUAL', totalDays: 20, usedDays: 5, lastModifiedAt: '' },
-        { employeeId: 'e2', locationId: 'l1', leaveType: 'SICK',   totalDays: 10, usedDays: 0, lastModifiedAt: '' },
+        {
+          employeeId: 'e1',
+          locationId: 'l1',
+          leaveType: 'ANNUAL',
+          totalDays: 20,
+          usedDays: 5,
+          lastModifiedAt: '',
+        },
+        {
+          employeeId: 'e2',
+          locationId: 'l1',
+          leaveType: 'SICK',
+          totalDays: 10,
+          usedDays: 0,
+          lastModifiedAt: '',
+        },
       ];
 
       const result = await service.runBatchSync(records, SyncTrigger.MANUAL);
@@ -116,8 +136,22 @@ describe('SyncService', () => {
 
     it('counts partial failures correctly', async () => {
       const records = [
-        { employeeId: 'e1', locationId: 'l1', leaveType: 'ANNUAL', totalDays: 20, usedDays: 5, lastModifiedAt: '' },
-        { employeeId: 'e2', locationId: 'l1', leaveType: 'SICK',   totalDays: 10, usedDays: 0, lastModifiedAt: '' },
+        {
+          employeeId: 'e1',
+          locationId: 'l1',
+          leaveType: 'ANNUAL',
+          totalDays: 20,
+          usedDays: 5,
+          lastModifiedAt: '',
+        },
+        {
+          employeeId: 'e2',
+          locationId: 'l1',
+          leaveType: 'SICK',
+          totalDays: 10,
+          usedDays: 0,
+          lastModifiedAt: '',
+        },
       ];
 
       balancesService.upsertFromHcm
@@ -134,7 +168,14 @@ describe('SyncService', () => {
 
     it('marks log as FAILED when all records fail', async () => {
       const records = [
-        { employeeId: 'e1', locationId: 'l1', leaveType: 'ANNUAL', totalDays: 20, usedDays: 5, lastModifiedAt: '' },
+        {
+          employeeId: 'e1',
+          locationId: 'l1',
+          leaveType: 'ANNUAL',
+          totalDays: 20,
+          usedDays: 5,
+          lastModifiedAt: '',
+        },
       ];
       balancesService.upsertFromHcm.mockRejectedValue(new Error('Fatal'));
 

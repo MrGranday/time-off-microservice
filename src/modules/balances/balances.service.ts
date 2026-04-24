@@ -23,10 +23,14 @@ export class BalancesService {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {
-    this.staleThresholdMs = this.configService.get<number>('sync.staleThresholdMs')!;
+    this.staleThresholdMs = this.configService.get<number>(
+      'sync.staleThresholdMs',
+    )!;
   }
 
-  async findAll(employeeId: string): Promise<(LeaveBalance & { isStale: boolean })[]> {
+  async findAll(
+    employeeId: string,
+  ): Promise<(LeaveBalance & { isStale: boolean })[]> {
     const balances = await this.balanceRepo.find({ where: { employeeId } });
     return balances.map((b) => Object.assign(b, { isStale: this.isStale(b) }));
   }
@@ -135,7 +139,11 @@ export class BalancesService {
     maxRetries = 3,
   ): Promise<LeaveBalance> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      const balance = await this.findOneOrThrow(employeeId, locationId, leaveType);
+      const balance = await this.findOneOrThrow(
+        employeeId,
+        locationId,
+        leaveType,
+      );
 
       if (balance.availableDays < daysRequested) {
         throw new ConflictException(
@@ -152,7 +160,9 @@ export class BalancesService {
       );
 
       if (result.affected && result.affected > 0) {
-        const updated = await this.balanceRepo.findOne({ where: { id: balance.id } });
+        const updated = await this.balanceRepo.findOne({
+          where: { id: balance.id },
+        });
         await this.auditService.log({
           entityType: AuditEntityType.BALANCE,
           entityId: balance.id,
@@ -186,7 +196,11 @@ export class BalancesService {
     requestId: string,
     actorId: string,
   ): Promise<void> {
-    const balance = await this.findOneOrThrow(employeeId, locationId, leaveType);
+    const balance = await this.findOneOrThrow(
+      employeeId,
+      locationId,
+      leaveType,
+    );
     const old = { ...balance };
 
     const newUsedDays = Math.max(0, balance.usedDays - days);
@@ -198,7 +212,9 @@ export class BalancesService {
       },
     );
 
-    const updated = await this.balanceRepo.findOne({ where: { id: balance.id } });
+    const updated = await this.balanceRepo.findOne({
+      where: { id: balance.id },
+    });
     await this.auditService.log({
       entityType: AuditEntityType.BALANCE,
       entityId: balance.id,
@@ -211,7 +227,10 @@ export class BalancesService {
 
   isStale(balance: LeaveBalance): boolean {
     if (!balance.lastSyncedAt) return true;
-    return Date.now() - new Date(balance.lastSyncedAt).getTime() > this.staleThresholdMs;
+    return (
+      Date.now() - new Date(balance.lastSyncedAt).getTime() >
+      this.staleThresholdMs
+    );
   }
 }
 

@@ -5,6 +5,7 @@ import { SyncLog, SyncStatus, SyncTrigger, SyncType } from './sync-log.entity';
 import { BalancesService } from '../balances/balances.service';
 import { HcmAdapter } from '../../infrastructure/hcm/hcm.adapter';
 import { HcmBatchRecord } from '../../infrastructure/hcm/hcm.types';
+import { LeaveType } from '../balances/balance.entity';
 
 @Injectable()
 export class SyncService {
@@ -40,12 +41,16 @@ export class SyncService {
     });
 
     try {
-      const hcmBalance = await this.hcmAdapter.getBalance(employeeId, locationId, leaveType);
+      const hcmBalance = await this.hcmAdapter.getBalance(
+        employeeId,
+        locationId,
+        leaveType,
+      );
 
       await this.balancesService.upsertFromHcm(
         employeeId,
         locationId,
-        leaveType as any,
+        leaveType as LeaveType,
         hcmBalance.totalDays,
         hcmBalance.usedDays,
         'SYSTEM_SYNC',
@@ -57,7 +62,9 @@ export class SyncService {
     } catch (err) {
       log.status = SyncStatus.FAILED;
       log.errorDetail = (err as Error).message;
-      this.logger.error(`Real-time sync failed for employee=${employeeId}: ${(err as Error).message}`);
+      this.logger.error(
+        `Real-time sync failed for employee=${employeeId}: ${(err as Error).message}`,
+      );
     } finally {
       log.durationMs = Date.now() - start;
       await this.syncLogRepo.save(log);
@@ -90,7 +97,7 @@ export class SyncService {
         await this.balancesService.upsertFromHcm(
           record.employeeId,
           record.locationId,
-          record.leaveType as any,
+          record.leaveType as LeaveType,
           record.totalDays,
           record.usedDays,
           actorId,
@@ -105,16 +112,26 @@ export class SyncService {
     }
 
     log.recordsSynced = synced;
-    log.status = failed > 0 && synced === 0 ? SyncStatus.FAILED : failed > 0 ? SyncStatus.PARTIAL : SyncStatus.SUCCESS;
+    log.status =
+      failed > 0 && synced === 0
+        ? SyncStatus.FAILED
+        : failed > 0
+          ? SyncStatus.PARTIAL
+          : SyncStatus.SUCCESS;
     log.errorDetail = failed > 0 ? `${failed} records failed to sync` : null;
     log.durationMs = Date.now() - start;
     await this.syncLogRepo.save(log);
 
-    this.logger.log(`Batch sync complete: ${synced} synced, ${failed} failed in ${log.durationMs}ms`);
+    this.logger.log(
+      `Batch sync complete: ${synced} synced, ${failed} failed in ${log.durationMs}ms`,
+    );
     return { synced, failed };
   }
 
-  async getLogs(page = 1, limit = 20): Promise<{ data: SyncLog[]; total: number }> {
+  async getLogs(
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: SyncLog[]; total: number }> {
     const [data, total] = await this.syncLogRepo.findAndCount({
       order: { createdAt: 'DESC' },
       take: limit,

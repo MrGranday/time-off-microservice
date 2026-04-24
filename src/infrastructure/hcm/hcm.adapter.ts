@@ -1,4 +1,8 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   HcmBalance,
@@ -51,7 +55,9 @@ export class HcmAdapter {
    * HCM may return an error for insufficient balance or invalid dimensions.
    * Even if HCM returns success, callers must still verify locally (defensive posture).
    */
-  async fileRequest(payload: HcmFileRequestPayload): Promise<HcmFileRequestResponse> {
+  async fileRequest(
+    payload: HcmFileRequestPayload,
+  ): Promise<HcmFileRequestResponse> {
     const url = `${this.baseUrl}/hcm/requests`;
     return this.request<HcmFileRequestResponse>('POST', url, payload);
   }
@@ -105,15 +111,21 @@ export class HcmAdapter {
         clearTimeout(timeout);
 
         if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({}));
+          const errorBody = (await response.json().catch(() => ({}))) as Record<
+            string,
+            unknown
+          >;
           const message =
-            (errorBody as any)?.message || `HCM returned ${response.status}`;
+            (typeof errorBody.message === 'string'
+              ? errorBody.message
+              : `HCM returned ${response.status}`) ||
+            `HCM returned ${response.status}`;
           throw new HcmApiError(message, response.status, errorBody);
         }
 
-        return response.json() as Promise<T>;
+        return (await response.json()) as T;
       } catch (err) {
-        lastError = err as Error;
+        lastError = err instanceof Error ? err : new Error(String(err));
 
         // Re-throw domain errors immediately — don't retry bad requests
         if (err instanceof HcmApiError && err.statusCode < 500) {
@@ -130,7 +142,9 @@ export class HcmAdapter {
       }
     }
 
-    this.logger.error(`HCM call failed after ${this.retryAttempts} attempts: ${lastError?.message}`);
+    this.logger.error(
+      `HCM call failed after ${this.retryAttempts} attempts: ${lastError?.message}`,
+    );
     throw new ServiceUnavailableException(
       `HCM service is unavailable after ${this.retryAttempts} retries`,
     );

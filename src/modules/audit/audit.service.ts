@@ -43,11 +43,18 @@ export class AuditService {
       });
       await this.auditRepo.save(entry);
     } catch (err) {
-      this.logger.error(`Failed to write audit log: ${(err as Error).message}`, (err as Error).stack);
+      this.logger.error(
+        `Failed to write audit log: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
     }
   }
 
-  async findByEntity(entityId: string, page = 1, limit = 20): Promise<{ data: AuditLog[]; total: number }> {
+  async findByEntity(
+    entityId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: AuditLog[]; total: number }> {
     const [data, total] = await this.auditRepo.findAndCount({
       where: { entityId },
       order: { createdAt: 'DESC' },
@@ -57,7 +64,10 @@ export class AuditService {
     return { data, total };
   }
 
-  async findAll(page = 1, limit = 20): Promise<{ data: AuditLog[]; total: number }> {
+  async findAll(
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: AuditLog[]; total: number }> {
     const [data, total] = await this.auditRepo.findAndCount({
       order: { createdAt: 'DESC' },
       take: limit,

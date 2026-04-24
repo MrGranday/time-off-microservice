@@ -19,29 +19,37 @@ export interface ApiResponse<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   private readonly logger = new Logger('HTTP');
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<ApiResponse<T>> {
     const request = context.switchToHttp().getRequest<Request>();
     const start = Date.now();
-    const correlationId = request.headers['x-correlation-id'] as string | undefined;
+    const correlationId = request.headers['x-correlation-id'] as
+      | string
+      | undefined;
 
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - start;
-        this.logger.log(
-          `[${request.method}] ${request.url} — ${duration}ms`,
-        );
+        this.logger.log(`[${request.method}] ${request.url} — ${duration}ms`);
       }),
-      map((data) => ({
-        data,
-        meta: {
-          timestamp: new Date().toISOString(),
-          path: request.url,
-          ...(correlationId && { correlationId }),
-        },
-      })),
+      map(
+        (data: T): ApiResponse<T> => ({
+          data,
+          meta: {
+            timestamp: new Date().toISOString(),
+            path: request.url,
+            ...(correlationId && { correlationId }),
+          },
+        }),
+      ),
     );
   }
 }

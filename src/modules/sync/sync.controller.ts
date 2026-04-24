@@ -11,13 +11,18 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { SyncService } from './sync.service';
-import { HcmBatchRecord } from '../../infrastructure/hcm/hcm.types';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../users/user.entity';
 import { SyncTrigger } from './sync-log.entity';
-import { IsArray, IsNotEmpty, IsString, IsNumber, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class HcmBatchRecordDto {
@@ -62,7 +67,11 @@ export class SyncController {
   @Post('batch')
   @HttpCode(HttpStatus.OK)
   async runBatchSync(@Body() dto: BatchSyncDto) {
-    return this.syncService.runBatchSync(dto.records, SyncTrigger.MANUAL, 'ADMIN');
+    return this.syncService.runBatchSync(
+      dto.records,
+      SyncTrigger.MANUAL,
+      'ADMIN',
+    );
   }
 
   @Get('logs')

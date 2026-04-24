@@ -27,7 +27,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const correlationId = (request.headers['x-correlation-id'] as string) || undefined;
+    const correlationId =
+      (request.headers['x-correlation-id'] as string) || undefined;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
@@ -42,13 +43,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = (resp.message as string | string[]) || message;
         error = (resp.error as string) || exception.name;
       } else {
-        message = exceptionResponse as string;
+        message = exceptionResponse;
         error = exception.name;
       }
     } else if (exception instanceof QueryFailedError) {
       // SQLite unique constraint violations → 409
-      const dbError = exception as QueryFailedError & { code?: string; errno?: number };
-      if (dbError.errno === 19 || (dbError as any).code === 'SQLITE_CONSTRAINT') {
+      const dbError = exception as QueryFailedError & {
+        code?: string;
+        errno?: number;
+      };
+      if (
+        dbError.errno === 19 ||
+        (dbError.code !== undefined && dbError.code === 'SQLITE_CONSTRAINT')
+      ) {
         status = HttpStatus.CONFLICT;
         message = 'A record with the provided unique key already exists';
         error = 'Conflict';
@@ -58,7 +65,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // Never leak internals in production
-    if (process.env.NODE_ENV === 'production' && status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (
+      process.env.NODE_ENV === 'production' &&
+      status === HttpStatus.INTERNAL_SERVER_ERROR
+    ) {
       message = 'Internal server error';
     }
 

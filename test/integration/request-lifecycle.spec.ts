@@ -28,8 +28,13 @@ const FAKE_BALANCE = {
 // ─── Module-level mocks ───────────────────────────────────────────────────────
 
 const MockHcmAdapter = {
-  getBalance: jest.fn().mockResolvedValue({ availableDays: 30, totalDays: 30, usedDays: 0 }),
-  fileRequest: jest.fn().mockResolvedValue({ hcmRequestId: 'HCM-TEST-001', status: 'PENDING_APPROVAL' }),
+  getBalance: jest
+    .fn()
+    .mockResolvedValue({ availableDays: 30, totalDays: 30, usedDays: 0 }),
+  fileRequest: jest.fn().mockResolvedValue({
+    hcmRequestId: 'HCM-TEST-001',
+    status: 'PENDING_APPROVAL',
+  }),
   ingestBatch: jest.fn().mockResolvedValue({ accepted: 0 }),
   ping: jest.fn().mockResolvedValue(true),
 };
@@ -42,7 +47,9 @@ const MockHcmAdapter = {
 const MockBalancesService = {
   findOne: jest.fn().mockResolvedValue(FAKE_BALANCE),
   findOneOrThrow: jest.fn().mockResolvedValue(FAKE_BALANCE),
-  deductDays: jest.fn().mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 }),
+  deductDays: jest
+    .fn()
+    .mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 }),
   restoreDays: jest.fn().mockResolvedValue(undefined),
   isStale: jest.fn().mockReturnValue(false),
   upsertFromHcm: jest.fn().mockResolvedValue(FAKE_BALANCE),
@@ -113,14 +120,24 @@ describe('Full Request Lifecycle (Integration)', () => {
     // Register manager
     const managerRes = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email: 'manager@test.com', name: 'Manager User', password: 'password123' });
+      .send({
+        email: 'manager@test.com',
+        name: 'Manager User',
+        password: 'password123',
+      });
     managerId = managerRes.body.data.user.id;
-    await dataSource.query(`UPDATE users SET role = 'MANAGER' WHERE id = ?`, [managerId]);
+    await dataSource.query(`UPDATE users SET role = 'MANAGER' WHERE id = ?`, [
+      managerId,
+    ]);
 
     // Register employee and link to manager with stable ID
     const employeeRes = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email: 'employee@test.com', name: 'Employee User', password: 'password123' });
+      .send({
+        email: 'employee@test.com',
+        name: 'Employee User',
+        password: 'password123',
+      });
     const dbEmployeeId = employeeRes.body.data.user.id;
     await dataSource.query(
       `UPDATE users SET id = 'emp-001', manager_id = ? WHERE id = ?`,
@@ -129,8 +146,16 @@ describe('Full Request Lifecycle (Integration)', () => {
     employeeId = 'emp-001';
 
     // Mint tokens signed with the same secret the app uses
-    employeeToken = jwtService.sign({ sub: employeeId, email: 'employee@test.com', role: UserRole.EMPLOYEE });
-    managerToken  = jwtService.sign({ sub: managerId,  email: 'manager@test.com',  role: UserRole.MANAGER  });
+    employeeToken = jwtService.sign({
+      sub: employeeId,
+      email: 'employee@test.com',
+      role: UserRole.EMPLOYEE,
+    });
+    managerToken = jwtService.sign({
+      sub: managerId,
+      email: 'manager@test.com',
+      role: UserRole.MANAGER,
+    });
 
     // Seed a real balance row so the /balances endpoint returns data
     await dataSource.query(
@@ -152,7 +177,13 @@ describe('Full Request Lifecycle (Integration)', () => {
     it('returns 401 when no token provided', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/requests')
-        .send({ locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2025-06-01', endDate: '2025-06-03', daysRequested: 2 });
+        .send({
+          locationId: 'loc-NYC',
+          leaveType: 'ANNUAL',
+          startDate: '2025-06-01',
+          endDate: '2025-06-03',
+          daysRequested: 2,
+        });
       expect(res.status).toBe(401);
     });
 
@@ -160,14 +191,24 @@ describe('Full Request Lifecycle (Integration)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/requests')
         .set('Authorization', `Bearer ${employeeToken}`)
-        .send({ locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2025-06-10', endDate: '2025-06-01', daysRequested: 2 });
+        .send({
+          locationId: 'loc-NYC',
+          leaveType: 'ANNUAL',
+          startDate: '2025-06-10',
+          endDate: '2025-06-01',
+          daysRequested: 2,
+        });
       expect(res.status).toBe(400);
     });
 
     it('creates a PENDING request successfully', async () => {
       MockBalancesService.findOne.mockResolvedValue(FAKE_BALANCE);
       MockBalancesService.findOneOrThrow.mockResolvedValue(FAKE_BALANCE);
-      MockBalancesService.deductDays.mockResolvedValue({ ...FAKE_BALANCE, usedDays: 2, availableDays: 28 });
+      MockBalancesService.deductDays.mockResolvedValue({
+        ...FAKE_BALANCE,
+        usedDays: 2,
+        availableDays: 28,
+      });
 
       const res = await request(app.getHttpServer())
         .post('/api/v1/requests')
@@ -218,13 +259,31 @@ describe('Full Request Lifecycle (Integration)', () => {
     it('returns the same request on duplicate submission with same key', async () => {
       MockBalancesService.findOne.mockResolvedValue(FAKE_BALANCE);
       MockBalancesService.findOneOrThrow.mockResolvedValue(FAKE_BALANCE);
-      MockBalancesService.deductDays.mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 });
+      MockBalancesService.deductDays.mockResolvedValue({
+        ...FAKE_BALANCE,
+        usedDays: 1,
+        availableDays: 29,
+      });
 
       const key = `idem-key-${Date.now()}`;
-      const payload = { locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2026-01-10', endDate: '2026-01-10', daysRequested: 1 };
+      const payload = {
+        locationId: 'loc-NYC',
+        leaveType: 'ANNUAL',
+        startDate: '2026-01-10',
+        endDate: '2026-01-10',
+        daysRequested: 1,
+      };
 
-      const first  = await request(app.getHttpServer()).post('/api/v1/requests').set('Authorization', `Bearer ${employeeToken}`).set('X-Idempotency-Key', key).send(payload);
-      const second = await request(app.getHttpServer()).post('/api/v1/requests').set('Authorization', `Bearer ${employeeToken}`).set('X-Idempotency-Key', key).send(payload);
+      const first = await request(app.getHttpServer())
+        .post('/api/v1/requests')
+        .set('Authorization', `Bearer ${employeeToken}`)
+        .set('X-Idempotency-Key', key)
+        .send(payload);
+      const second = await request(app.getHttpServer())
+        .post('/api/v1/requests')
+        .set('Authorization', `Bearer ${employeeToken}`)
+        .set('X-Idempotency-Key', key)
+        .send(payload);
 
       expect(first.status).toBe(201);
       expect(second.status).toBe(201);
@@ -239,15 +298,28 @@ describe('Full Request Lifecycle (Integration)', () => {
     beforeAll(async () => {
       MockBalancesService.findOne.mockResolvedValue(FAKE_BALANCE);
       MockBalancesService.findOneOrThrow.mockResolvedValue(FAKE_BALANCE);
-      MockBalancesService.deductDays.mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 });
+      MockBalancesService.deductDays.mockResolvedValue({
+        ...FAKE_BALANCE,
+        usedDays: 1,
+        availableDays: 29,
+      });
 
       const res = await request(app.getHttpServer())
         .post('/api/v1/requests')
         .set('Authorization', `Bearer ${employeeToken}`)
-        .send({ locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2026-02-01', endDate: '2026-02-01', daysRequested: 1, reason: 'Personal day' });
+        .send({
+          locationId: 'loc-NYC',
+          leaveType: 'ANNUAL',
+          startDate: '2026-02-01',
+          endDate: '2026-02-01',
+          daysRequested: 1,
+          reason: 'Personal day',
+        });
 
       if (!res.body.data?.id) {
-        throw new Error(`Manager Approval beforeAll: failed to create request — status=${res.status} body=${JSON.stringify(res.body)}`);
+        throw new Error(
+          `Manager Approval beforeAll: failed to create request — status=${res.status} body=${JSON.stringify(res.body)}`,
+        );
       }
       requestId = res.body.data.id;
     });
@@ -263,10 +335,20 @@ describe('Full Request Lifecycle (Integration)', () => {
     it('returns 403 when unlinked manager tries to approve', async () => {
       const otherRes = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
-        .send({ email: 'other-manager@test.com', name: 'Other Manager', password: 'password123' });
+        .send({
+          email: 'other-manager@test.com',
+          name: 'Other Manager',
+          password: 'password123',
+        });
       const otherId = otherRes.body.data.user.id;
-      await dataSource.query(`UPDATE users SET role = 'MANAGER' WHERE id = ?`, [otherId]);
-      const otherToken = jwtService.sign({ sub: otherId, email: 'other-manager@test.com', role: UserRole.MANAGER });
+      await dataSource.query(`UPDATE users SET role = 'MANAGER' WHERE id = ?`, [
+        otherId,
+      ]);
+      const otherToken = jwtService.sign({
+        sub: otherId,
+        email: 'other-manager@test.com',
+        role: UserRole.MANAGER,
+      });
 
       const res = await request(app.getHttpServer())
         .patch(`/api/v1/requests/${requestId}/approve`)
@@ -302,15 +384,27 @@ describe('Full Request Lifecycle (Integration)', () => {
     beforeAll(async () => {
       MockBalancesService.findOne.mockResolvedValue(FAKE_BALANCE);
       MockBalancesService.findOneOrThrow.mockResolvedValue(FAKE_BALANCE);
-      MockBalancesService.deductDays.mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 });
+      MockBalancesService.deductDays.mockResolvedValue({
+        ...FAKE_BALANCE,
+        usedDays: 1,
+        availableDays: 29,
+      });
 
       const res = await request(app.getHttpServer())
         .post('/api/v1/requests')
         .set('Authorization', `Bearer ${employeeToken}`)
-        .send({ locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2026-03-01', endDate: '2026-03-01', daysRequested: 1 });
+        .send({
+          locationId: 'loc-NYC',
+          leaveType: 'ANNUAL',
+          startDate: '2026-03-01',
+          endDate: '2026-03-01',
+          daysRequested: 1,
+        });
 
       if (!res.body.data?.id) {
-        throw new Error(`Employee Cancellation beforeAll: failed to create request — status=${res.status} body=${JSON.stringify(res.body)}`);
+        throw new Error(
+          `Employee Cancellation beforeAll: failed to create request — status=${res.status} body=${JSON.stringify(res.body)}`,
+        );
       }
       pendingRequestId = res.body.data.id;
     });
@@ -336,18 +430,30 @@ describe('Full Request Lifecycle (Integration)', () => {
     it('restores balance after manager rejects request', async () => {
       MockBalancesService.findOne.mockResolvedValue(FAKE_BALANCE);
       MockBalancesService.findOneOrThrow.mockResolvedValue(FAKE_BALANCE);
-      MockBalancesService.deductDays.mockResolvedValue({ ...FAKE_BALANCE, usedDays: 1, availableDays: 29 });
+      MockBalancesService.deductDays.mockResolvedValue({
+        ...FAKE_BALANCE,
+        usedDays: 1,
+        availableDays: 29,
+      });
       MockBalancesService.restoreDays.mockResolvedValue(undefined);
 
       const balBefore = await request(app.getHttpServer())
         .get(`/api/v1/balances/${employeeId}/loc-NYC/ANNUAL`)
         .set('Authorization', `Bearer ${employeeToken}`);
-      const availBefore = (balBefore.body.data?.totalDays || 0) - (balBefore.body.data?.usedDays || 0);
+      const availBefore =
+        (balBefore.body.data?.totalDays || 0) -
+        (balBefore.body.data?.usedDays || 0);
 
       const createRes = await request(app.getHttpServer())
         .post('/api/v1/requests')
         .set('Authorization', `Bearer ${employeeToken}`)
-        .send({ locationId: 'loc-NYC', leaveType: 'ANNUAL', startDate: '2026-04-01', endDate: '2026-04-01', daysRequested: 1 });
+        .send({
+          locationId: 'loc-NYC',
+          leaveType: 'ANNUAL',
+          startDate: '2026-04-01',
+          endDate: '2026-04-01',
+          daysRequested: 1,
+        });
       const reqId = createRes.body.data?.id;
       expect(reqId).toBeDefined();
 
@@ -362,7 +468,9 @@ describe('Full Request Lifecycle (Integration)', () => {
       const balAfter = await request(app.getHttpServer())
         .get(`/api/v1/balances/${employeeId}/loc-NYC/ANNUAL`)
         .set('Authorization', `Bearer ${employeeToken}`);
-      const availAfter = (balAfter.body.data?.totalDays || 0) - (balAfter.body.data?.usedDays || 0);
+      const availAfter =
+        (balAfter.body.data?.totalDays || 0) -
+        (balAfter.body.data?.usedDays || 0);
       expect(availAfter).toBeGreaterThanOrEqual(availBefore);
     });
   });

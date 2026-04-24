@@ -1,6 +1,6 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 
@@ -16,7 +16,7 @@ async function bootstrap() {
   const prefix = configService.get<string>('apiPrefix')!;
 
   // ── Security headers ─────────────────────────────────────────────────────────
-  app.use((helmet as any).default());
+  app.use(helmet());
 
   // ── Global API prefix ────────────────────────────────────────────────────────
   app.setGlobalPrefix(prefix);
@@ -34,9 +34,10 @@ async function bootstrap() {
 
   // ── CORS ─────────────────────────────────────────────────────────────────────
   app.enableCors({
-    origin: configService.get<string>('nodeEnv') === 'production'
-      ? false   // configure allowed origins in prod
-      : true,
+    origin:
+      configService.get<string>('nodeEnv') === 'production'
+        ? false // configure allowed origins in prod
+        : true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
       'Authorization',
@@ -49,7 +50,9 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log(`🚀 Time-Off Microservice running on http://localhost:${port}/${prefix}`);
+  console.log(
+    `🚀 Time-Off Microservice running on http://localhost:${port}/${prefix}`,
+  );
 }
 
-bootstrap();
+void bootstrap();

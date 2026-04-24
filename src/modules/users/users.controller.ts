@@ -51,9 +51,10 @@ export class UsersController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     @CurrentUser() actor: { id: string },
   ) {
-    return this.usersService.update(id, dto, actor.id);
+    return this.usersService.update(id, dto);
   }
 
   @Patch(':id/assign-manager')
@@ -62,7 +63,7 @@ export class UsersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignManagerDto,
   ) {
-    return this.usersService.update(id, { managerId: dto.managerId }, id);
+    return this.usersService.update(id, { managerId: dto.managerId });
   }
 
   @Delete(':id')

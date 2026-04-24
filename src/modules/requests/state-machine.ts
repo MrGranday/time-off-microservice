@@ -8,10 +8,14 @@ import { UnprocessableEntityException } from '@nestjs/common';
  * Any code that changes status MUST call validateTransition() first.
  */
 const TRANSITIONS: Record<RequestStatus, RequestStatus[]> = {
-  [RequestStatus.DRAFT]:     [RequestStatus.PENDING, RequestStatus.CANCELLED],
-  [RequestStatus.PENDING]:   [RequestStatus.APPROVED, RequestStatus.REJECTED, RequestStatus.CANCELLED],
-  [RequestStatus.APPROVED]:  [], // terminal
-  [RequestStatus.REJECTED]:  [], // terminal
+  [RequestStatus.DRAFT]: [RequestStatus.PENDING, RequestStatus.CANCELLED],
+  [RequestStatus.PENDING]: [
+    RequestStatus.APPROVED,
+    RequestStatus.REJECTED,
+    RequestStatus.CANCELLED,
+  ],
+  [RequestStatus.APPROVED]: [], // terminal
+  [RequestStatus.REJECTED]: [], // terminal
   [RequestStatus.CANCELLED]: [], // terminal
 };
 

@@ -1,28 +1,41 @@
 import { UnprocessableEntityException } from '@nestjs/common';
-import { validateTransition, canEmployeeCancel } from '../../src/modules/requests/state-machine';
+import {
+  validateTransition,
+  canEmployeeCancel,
+} from '../../src/modules/requests/state-machine';
 import { RequestStatus } from '../../src/modules/requests/request.entity';
 
 describe('State Machine', () => {
   describe('validateTransition', () => {
     // ── Valid transitions ───────────────────────────────────────────────────
     it('allows DRAFT → PENDING', () => {
-      expect(() => validateTransition(RequestStatus.DRAFT, RequestStatus.PENDING)).not.toThrow();
+      expect(() =>
+        validateTransition(RequestStatus.DRAFT, RequestStatus.PENDING),
+      ).not.toThrow();
     });
 
     it('allows DRAFT → CANCELLED', () => {
-      expect(() => validateTransition(RequestStatus.DRAFT, RequestStatus.CANCELLED)).not.toThrow();
+      expect(() =>
+        validateTransition(RequestStatus.DRAFT, RequestStatus.CANCELLED),
+      ).not.toThrow();
     });
 
     it('allows PENDING → APPROVED', () => {
-      expect(() => validateTransition(RequestStatus.PENDING, RequestStatus.APPROVED)).not.toThrow();
+      expect(() =>
+        validateTransition(RequestStatus.PENDING, RequestStatus.APPROVED),
+      ).not.toThrow();
     });
 
     it('allows PENDING → REJECTED', () => {
-      expect(() => validateTransition(RequestStatus.PENDING, RequestStatus.REJECTED)).not.toThrow();
+      expect(() =>
+        validateTransition(RequestStatus.PENDING, RequestStatus.REJECTED),
+      ).not.toThrow();
     });
 
     it('allows PENDING → CANCELLED', () => {
-      expect(() => validateTransition(RequestStatus.PENDING, RequestStatus.CANCELLED)).not.toThrow();
+      expect(() =>
+        validateTransition(RequestStatus.PENDING, RequestStatus.CANCELLED),
+      ).not.toThrow();
     });
 
     // ── Invalid transitions (terminal states) ───────────────────────────────

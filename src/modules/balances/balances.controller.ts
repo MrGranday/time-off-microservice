@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  UseGuards,
-  Query,
-  ParseIntPipe,
-  DefaultValuePipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards, Query } from '@nestjs/common';
 import { BalancesService } from './balances.service';
 import { SyncService } from '../sync/sync.service';
 import { LeaveType } from './balance.entity';
@@ -31,7 +21,7 @@ export class BalancesController {
   @Get(':employeeId')
   async getBalances(
     @Param('employeeId') employeeId: string,
-    @CurrentUser() user: { id: string; role: string },
+    @CurrentUser() user: { id: string; role: UserRole },
   ) {
     this.assertCanViewEmployee(user, employeeId);
     return this.balancesService.findAll(employeeId);
@@ -42,10 +32,14 @@ export class BalancesController {
     @Param('employeeId') employeeId: string,
     @Param('locationId') locationId: string,
     @Param('leaveType') leaveType: string,
-    @CurrentUser() user: { id: string; role: string },
+    @CurrentUser() user: { id: string; role: UserRole },
   ) {
     this.assertCanViewEmployee(user, employeeId);
-    return this.balancesService.findOne(employeeId, locationId, leaveType as LeaveType);
+    return this.balancesService.findOne(
+      employeeId,
+      locationId,
+      leaveType as LeaveType,
+    );
   }
 
   /** Manually trigger a real-time HCM sync for an employee's balance. */
@@ -66,7 +60,7 @@ export class BalancesController {
   }
 
   private assertCanViewEmployee(
-    user: { id: string; role: string },
+    user: { id: string; role: UserRole },
     employeeId: string,
   ): void {
     if (

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   ConflictException,
@@ -67,15 +68,23 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  private generateTokens(user: { id: string; email: string; name: string; role: string }): AuthTokens {
+  private generateTokens(user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  }): AuthTokens {
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
 
-    const expiresIn = this.configService.get<string>('jwt.expiresIn') as any;
-    const accessToken = this.jwtService.sign(payload, { expiresIn });
+    const expiresIn = this.configService.get<string>('jwt.expiresIn') ?? '1h';
+
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: expiresIn as any,
+    });
 
     return {
       accessToken,

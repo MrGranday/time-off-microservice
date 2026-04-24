@@ -8,7 +8,6 @@ import { DataSource } from 'typeorm';
 import { UserRole } from '../../src/modules/users/user.entity';
 import { HcmAdapter } from '../../src/infrastructure/hcm/hcm.adapter';
 
-
 async function buildApp(): Promise<INestApplication> {
   process.env.DB_PATH = ':memory:';
   process.env.JWT_SECRET = 'test-secret-minimum-32-characters-long';
@@ -18,8 +17,13 @@ async function buildApp(): Promise<INestApplication> {
   process.env.STALE_THRESHOLD_MS = '300000';
 
   const MockHcmAdapter = {
-    getBalance: jest.fn().mockResolvedValue({ availableDays: 30, totalDays: 30, usedDays: 0 }),
-    fileRequest: jest.fn().mockResolvedValue({ hcmRequestId: 'HCM-TEST', status: 'PENDING_APPROVAL' }),
+    getBalance: jest
+      .fn()
+      .mockResolvedValue({ availableDays: 30, totalDays: 30, usedDays: 0 }),
+    fileRequest: jest.fn().mockResolvedValue({
+      hcmRequestId: 'HCM-TEST',
+      status: 'PENDING_APPROVAL',
+    }),
     ingestBatch: jest.fn().mockResolvedValue({ accepted: 0 }),
     ping: jest.fn().mockResolvedValue(true),
   };
@@ -48,8 +52,6 @@ function makeSignature(body: string, timestamp: number | string): string {
 describe('HCM Webhook — HMAC Security', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let adminToken: string;
-  let jwtService: JwtService;
 
   beforeAll(async () => {
     // Suppress GlobalExceptionFilter noise from expected 4xx paths
@@ -62,10 +64,15 @@ describe('HCM Webhook — HMAC Security', () => {
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email: 'admin@test.com', name: 'Admin', password: 'password123' });
+      .send({
+        email: 'admin@test.com',
+        name: 'Admin',
+        password: 'password123',
+      });
     const adminId = res.body.data.user.id;
-    await dataSource.query(`UPDATE users SET role = 'ADMIN' WHERE id = ?`, [adminId]);
-    adminToken = jwtService.sign({ sub: adminId, email: 'admin@test.com', role: UserRole.ADMIN });
+    await dataSource.query(`UPDATE users SET role = 'ADMIN' WHERE id = ?`, [
+      adminId,
+    ]);
 
     await dataSource.query(
       `INSERT INTO users (id, email, name, password, role, is_active, created_at, updated_at)
@@ -87,7 +94,14 @@ describe('HCM Webhook — HMAC Security', () => {
     const payload = {
       event: 'BALANCE_UPDATED',
       timestamp: new Date().toISOString(),
-      data: { employeeId: 'emp-wh-1', locationId: 'loc-NYC', leaveType: 'ANNUAL', totalDays: 20, usedDays: 0, effectiveDate: '2025-01-01' },
+      data: {
+        employeeId: 'emp-wh-1',
+        locationId: 'loc-NYC',
+        leaveType: 'ANNUAL',
+        totalDays: 20,
+        usedDays: 0,
+        effectiveDate: '2025-01-01',
+      },
     };
     const timestamp = Date.now();
 
@@ -104,11 +118,19 @@ describe('HCM Webhook — HMAC Security', () => {
     const payload = {
       event: 'BALANCE_UPDATED',
       timestamp: new Date().toISOString(),
-      data: { employeeId: 'emp-wh-1', locationId: 'loc-NYC', leaveType: 'ANNUAL', totalDays: 20, usedDays: 0, effectiveDate: '2025-01-01' },
+      data: {
+        employeeId: 'emp-wh-1',
+        locationId: 'loc-NYC',
+        leaveType: 'ANNUAL',
+        totalDays: 20,
+        usedDays: 0,
+        effectiveDate: '2025-01-01',
+      },
     };
     const timestamp = Date.now();
     const body = JSON.stringify(payload);
-    const badSig = 'aabbcc0000000000000000000000000000000000000000000000000000000000';
+    const badSig =
+      'aabbcc0000000000000000000000000000000000000000000000000000000000';
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/webhooks/hcm/balance-update')
@@ -124,7 +146,14 @@ describe('HCM Webhook — HMAC Security', () => {
     const payload = {
       event: 'BALANCE_UPDATED',
       timestamp: new Date().toISOString(),
-      data: { employeeId: 'emp-wh-1', locationId: 'loc-NYC', leaveType: 'ANNUAL', totalDays: 20, usedDays: 0, effectiveDate: '2025-01-01' },
+      data: {
+        employeeId: 'emp-wh-1',
+        locationId: 'loc-NYC',
+        leaveType: 'ANNUAL',
+        totalDays: 20,
+        usedDays: 0,
+        effectiveDate: '2025-01-01',
+      },
     };
     const staleTimestamp = Date.now() - 6 * 60 * 1000;
     const body = JSON.stringify(payload);
@@ -192,10 +221,20 @@ describe('Batch Sync (Integration)', () => {
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email: 'sync-admin@test.com', name: 'SyncAdmin', password: 'password123' });
+      .send({
+        email: 'sync-admin@test.com',
+        name: 'SyncAdmin',
+        password: 'password123',
+      });
     const adminId = res.body.data.user.id;
-    await dataSource.query(`UPDATE users SET role = 'ADMIN' WHERE id = ?`, [adminId]);
-    adminToken = jwtService.sign({ sub: adminId, email: 'sync-admin@test.com', role: UserRole.ADMIN });
+    await dataSource.query(`UPDATE users SET role = 'ADMIN' WHERE id = ?`, [
+      adminId,
+    ]);
+    adminToken = jwtService.sign({
+      sub: adminId,
+      email: 'sync-admin@test.com',
+      role: UserRole.ADMIN,
+    });
 
     await dataSource.query(
       `INSERT INTO users (id, email, name, password, role, is_active, created_at, updated_at)
@@ -206,7 +245,11 @@ describe('Batch Sync (Integration)', () => {
        VALUES ('batch-emp-2', 'b2@test.com', 'B2', 'pass', 'EMPLOYEE', 1, datetime('now'), datetime('now'))`,
     );
 
-    employeeToken = jwtService.sign({ sub: 'batch-emp-1', email: 'b1@test.com', role: UserRole.EMPLOYEE });
+    employeeToken = jwtService.sign({
+      sub: 'batch-emp-1',
+      email: 'b1@test.com',
+      role: UserRole.EMPLOYEE,
+    });
   });
 
   afterAll(async () => {
@@ -224,8 +267,22 @@ describe('Batch Sync (Integration)', () => {
 
   it('ingests batch records and creates balances', async () => {
     const records = [
-      { employeeId: 'batch-emp-1', locationId: 'loc-BATCH', leaveType: 'ANNUAL', totalDays: 22, usedDays: 4, lastModifiedAt: new Date().toISOString() },
-      { employeeId: 'batch-emp-2', locationId: 'loc-BATCH', leaveType: 'SICK',   totalDays: 10, usedDays: 1, lastModifiedAt: new Date().toISOString() },
+      {
+        employeeId: 'batch-emp-1',
+        locationId: 'loc-BATCH',
+        leaveType: 'ANNUAL',
+        totalDays: 22,
+        usedDays: 4,
+        lastModifiedAt: new Date().toISOString(),
+      },
+      {
+        employeeId: 'batch-emp-2',
+        locationId: 'loc-BATCH',
+        leaveType: 'SICK',
+        totalDays: 10,
+        usedDays: 1,
+        lastModifiedAt: new Date().toISOString(),
+      },
     ];
 
     const res = await request(app.getHttpServer())

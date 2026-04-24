@@ -1,6 +1,5 @@
 import {
   Injectable,
-  CanActivate,
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -14,14 +13,27 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = any>(err: any, user: TUser): TUser {
+  handleRequest<TUser = any>(
+    err: any,
+    user: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    info: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    context: ExecutionContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    status?: any,
+  ): TUser {
     if (err || !user) {
-      throw new UnauthorizedException('Invalid or missing authentication token');
+      throw new UnauthorizedException(
+        'Invalid or missing authentication token',
+      );
     }
-    return user;
+    return user as TUser;
   }
 }

@@ -46,7 +46,11 @@ describe('AuthService', () => {
     it('throws ConflictException when email already exists', async () => {
       usersService.findByEmail.mockResolvedValue({ id: 'existing-user' });
       await expect(
-        service.register({ email: 'test@test.com', name: 'Test', password: 'password123' }),
+        service.register({
+          email: 'test@test.com',
+          name: 'Test',
+          password: 'password123',
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -73,10 +77,17 @@ describe('AuthService', () => {
     it('hashes the password (never stores plaintext)', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       usersService.create.mockResolvedValue({
-        id: 'u1', email: 'a@a.com', name: 'A', role: UserRole.EMPLOYEE,
+        id: 'u1',
+        email: 'a@a.com',
+        name: 'A',
+        role: UserRole.EMPLOYEE,
       });
 
-      await service.register({ email: 'a@a.com', name: 'A', password: 'plaintext' });
+      await service.register({
+        email: 'a@a.com',
+        name: 'A',
+        password: 'plaintext',
+      });
 
       const createCall = usersService.create.mock.calls[0][0];
       expect(createCall.password).not.toBe('plaintext');

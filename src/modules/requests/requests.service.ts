@@ -18,7 +18,6 @@ import { UsersService } from '../users/users.service';
 import { AuditEntityType } from '../audit/audit-log.entity';
 import { HcmAdapter, HcmApiError } from '../../infrastructure/hcm/hcm.adapter';
 import { validateTransition, canEmployeeCancel } from './state-machine';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RequestsService {
@@ -54,9 +53,13 @@ export class RequestsService {
   ): Promise<TimeOffRequest> {
     // ── 1. Idempotency check ─────────────────────────────────────────────────
     if (idempotencyKey) {
-      const existing = await this.requestRepo.findOne({ where: { idempotencyKey } });
+      const existing = await this.requestRepo.findOne({
+        where: { idempotencyKey },
+      });
       if (existing) {
-        this.logger.log(`Idempotency hit: returning existing request ${existing.id}`);
+        this.logger.log(
+          `Idempotency hit: returning existing request ${existing.id}`,
+        );
         return existing;
       }
     }
@@ -80,8 +83,14 @@ export class RequestsService {
     }
 
     if (this.balancesService.isStale(balance)) {
-      this.logger.log(`Balance is stale — refreshing from HCM for employee ${employeeId}`);
-      await this.syncService.syncEmployeeBalance(employeeId, dto.locationId, dto.leaveType);
+      this.logger.log(
+        `Balance is stale — refreshing from HCM for employee ${employeeId}`,
+      );
+      await this.syncService.syncEmployeeBalance(
+        employeeId,
+        dto.locationId,
+        dto.leaveType,
+      );
     }
 
     // ── 4. Local pre-check (defensive) ──────────────────────────────────────
@@ -146,7 +155,9 @@ export class RequestsService {
       saved.hcmStatus = hcmResponse.status;
     } catch (err) {
       // HCM failure: restore balance, reject request
-      this.logger.error(`HCM file request failed for ${saved.id}: ${(err as Error).message}`);
+      this.logger.error(
+        `HCM file request failed for ${saved.id}: ${(err as Error).message}`,
+      );
 
       await this.balancesService.restoreDays(
         employeeId,
@@ -181,7 +192,10 @@ export class RequestsService {
   }
 
   async findById(id: string): Promise<TimeOffRequest> {
-    const req = await this.requestRepo.findOne({ where: { id }, relations: ['employee'] });
+    const req = await this.requestRepo.findOne({
+      where: { id },
+      relations: ['employee'],
+    });
     if (!req) throw new NotFoundException(`Request ${id} not found`);
     return req;
   }
@@ -190,7 +204,12 @@ export class RequestsService {
     filters: { employeeId?: string; status?: string },
     page = 1,
     limit = 20,
-  ): Promise<{ data: TimeOffRequest[]; total: number; page: number; limit: number }> {
+  ): Promise<{
+    data: TimeOffRequest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const where: Record<string, unknown> = {};
     if (filters.employeeId) where.employeeId = filters.employeeId;
     if (filters.status) where.status = filters.status;
@@ -220,7 +239,10 @@ export class RequestsService {
     const old = { ...request };
 
     // Explicit manager link check
-    const isLinked = await this.usersService.isManagerOf(managerId, request.employeeId);
+    const isLinked = await this.usersService.isManagerOf(
+      managerId,
+      request.employeeId,
+    );
     if (!isLinked) {
       throw new ForbiddenException(
         'You are not the designated manager for this employee',
@@ -265,7 +287,10 @@ export class RequestsService {
     const request = await this.findById(requestId);
     const old = { ...request };
 
-    const isLinked = await this.usersService.isManagerOf(managerId, request.employeeId);
+    const isLinked = await this.usersService.isManagerOf(
+      managerId,
+      request.employeeId,
+    );
     if (!isLinked) {
       throw new ForbiddenException(
         'You are not the designated manager for this employee',

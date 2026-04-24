@@ -79,13 +79,20 @@ export class TimeOffRequest {
    * retried requests with the same key return the original record instead of
    * creating a duplicate.
    */
-  @Column({ type: 'text', nullable: true, unique: true, name: 'idempotency_key' })
+  @Column({
+    type: 'text',
+    nullable: true,
+    unique: true,
+    name: 'idempotency_key',
+  })
   idempotencyKey: string | null;
 
   @Column({ type: 'integer', default: 1 })
   version: number;
 
-  @ManyToOne(() => User, (user) => user.timeOffRequests, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.timeOffRequests, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'employee_id' })
   employee: User;
 
